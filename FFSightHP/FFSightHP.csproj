@@ -13,5 +13,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>
     </Content>
+    <Content Include="FFSightHP.json" />
   </ItemGroup>
 </Project>

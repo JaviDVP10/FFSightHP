@@ -1,27 +1,48 @@
-﻿using System;
-using System.Numerics;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Statuses;
 using Dalamud.Interface.Windowing;
+using Dalamud.IoC;
+using Dalamud.Plugin.Services;
+using System;
+using System.Numerics;
 
-namespace SamplePlugin.Windows;
+
+
+namespace FFSightHP.Windows;
 
 public class ConfigWindow : Window, IDisposable
+
+
 {
     private readonly Configuration configuration;
+    private readonly ffsighthp plugin;
+
+
 
     // We give this window a constant ID using ###.
     // This allows for labels to be dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(Plugin plugin) : base("A Wonderful Configuration Window###With a constant ID")
+    public ConfigWindow(ffsighthp plugin) : base("Configuration", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
+
+        SizeConstraints = new WindowSizeConstraints
+        {
+            MinimumSize = new Vector2(375, 330),
+            MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
+        };
+
         Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoScrollWithMouse;
 
-        Size = new Vector2(232, 90);
-        SizeCondition = ImGuiCond.Always;
+    
 
+        this.plugin = plugin ?? throw new ArgumentNullException(nameof(plugin));
         configuration = plugin.Configuration;
+
+
     }
+
 
     public void Dispose() { }
 
@@ -40,20 +61,20 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        // Can't ref a property, so use a local copy
-        var configValue = configuration.SomePropertyToBeSavedAndWithADefault;
-        if (ImGui.Checkbox("Random Config Bool", ref configValue))
-        {
-            configuration.SomePropertyToBeSavedAndWithADefault = configValue;
-            // Can save immediately on change if you don't want to provide a "Save and Close" button
-            configuration.Save();
-        }
 
         var movable = configuration.IsConfigWindowMovable;
-        if (ImGui.Checkbox("Movable Config Window", ref movable))
+        if (ImGui.Checkbox("ACTIVATE TARGET HP", ref movable))
         {
             configuration.IsConfigWindowMovable = movable;
             configuration.Save();
         }
+
+        ImGui.Text($"Class: {plugin.clase}");
+        ImGui.Text($"Class: {plugin.hpstring}");
+
+
+
+
+
     }
 }

@@ -1,7 +1,7 @@
-﻿using Dalamud.Configuration;
+using Dalamud.Configuration;
 using System;
 
-namespace SamplePlugin;
+namespace FFSightHP;
 
 [Serializable]
 public class Configuration : IPluginConfiguration
@@ -14,6 +14,6 @@ public class Configuration : IPluginConfiguration
     // The below exist just to make saving less cumbersome
     public void Save()
     {
-        Plugin.PluginInterface.SavePluginConfig(this);
+        ffsighthp.PluginInterface.SavePluginConfig(this);
     }
 }

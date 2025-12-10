@@ -1,14 +1,19 @@
-﻿using Dalamud.Game.Command;
+using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.Command;
+using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using System.IO;
-using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using SamplePlugin.Windows;
+using FFSightHP.Windows;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using System;
+using System.IO;
+using System.Linq;
+using System.Transactions;
 
-namespace SamplePlugin;
+namespace FFSightHP;
 
-public sealed class Plugin : IDalamudPlugin
+public sealed class ffsighthp : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
@@ -17,30 +22,43 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
 
-    private const string CommandName = "/pmycommand";
+    // IFramework se usa para suscribirse a actualizaciones por frame
+    [PluginService] internal static IFramework Framework { get; private set; } = null!;
+
+    private const string CommandName = "/ffsighthp";
 
     public Configuration Configuration { get; init; }
 
-    public readonly WindowSystem WindowSystem = new("SamplePlugin");
+    public readonly WindowSystem WindowSystem = new("ffsighthp");
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
 
-    public Plugin()
+
+    // Declarar variables para llamar a la ventana
+    public string clase { get; private set; } = string.Empty;
+    public string hpstring { get; private set; } = string.Empty;
+
+    public ffsighthp()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // You might normally want to embed resources and load them from the manifest stream
-        var goatImagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
 
+        // Creo una ventana de configuración llamando a la CofingWindow
         ConfigWindow = new ConfigWindow(this);
-        MainWindow = new MainWindow(this, goatImagePath);
 
+        // Creo una ventana principal llamando a la ConfigWindow y la cargo en el sistema de ventanas
         WindowSystem.AddWindow(ConfigWindow);
-        WindowSystem.AddWindow(MainWindow);
+
+       
+
+
+
+
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = "A useful message to display in /xlhelp"
+            HelpMessage = "To access config"
         });
 
         // Tell the UI system that we want our windows to be drawn throught he window system
@@ -53,11 +71,39 @@ public sealed class Plugin : IDalamudPlugin
         // Adds another button doing the same but for the main ui of the plugin
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
 
+        // Suscríbete al update del framework para hacer polling del objetivo actual
+        
+
         // Add a simple message to the log with level set to information
         // Use /xllog to open the log window in-game
         // Example Output: 00:57:54.959 | INF | [SamplePlugin] ===A cool log message from Sample Plugin===
-        Log.Information($"===A cool log message from {PluginInterface.Manifest.Name}===");
+        Log.Information($"===PLugin {PluginInterface.Manifest.Name} Loaded.===");
+
+        Framework.Update += OnFrameworkUpdate;
+
     }
+
+
+
+
+
+    private void OnFrameworkUpdate(IFramework framework){
+
+        var player = ClientState.LocalPlayer;
+
+        this.clase = ClientState.LocalPlayer.ClassJob.Value.Abbreviation.ToString();
+
+        var hpstringS = ClientState.LocalPlayer.TargetObject as Dalamud.Game.ClientState.Objects.Types.ICharacter;
+
+        this.hpstring = hpstringS.CurrentHp.ToString() + "/" + hpstringS.MaxHp.ToString();
+
+
+        return;
+    }
+
+
+
+
 
     public void Dispose()
     {
@@ -65,7 +111,10 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
         PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;
-        
+
+        // Anular la suscripción al Update
+        Framework.Update -= OnFrameworkUpdate;
+
         WindowSystem.RemoveAllWindows();
 
         ConfigWindow.Dispose();
@@ -77,7 +126,7 @@ public sealed class Plugin : IDalamudPlugin
     private void OnCommand(string command, string args)
     {
         // In response to the slash command, toggle the display status of our main ui
-        MainWindow.Toggle();
+        ConfigWindow.Toggle();
     }
     
     public void ToggleConfigUi() => ConfigWindow.Toggle();
