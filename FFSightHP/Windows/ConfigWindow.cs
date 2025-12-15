@@ -28,7 +28,7 @@ public class ConfigWindow : Window, IDisposable
 
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(375, 330),
+            MinimumSize = new Vector2(500, 500),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
@@ -70,8 +70,11 @@ public class ConfigWindow : Window, IDisposable
         }
 
         ImGui.Text($"Class: {plugin.clase}");
-        ImGui.Text($"Class: {plugin.hpstring}");
-
+        ImGui.Text($"Vida: {plugin.hpstring}");
+        ImGui.Text($"Mensaje Sistema: {plugin.mensaje_log}");
+        ImGui.Text($"Mensaje Hora: {plugin.mensaje_log2}");
+        ImGui.Text($"Sistema Daño: {plugin.mensaje_log3}");
+        ImGui.Text($"DPS: {plugin.mensaje_log4}");
 
 
 
